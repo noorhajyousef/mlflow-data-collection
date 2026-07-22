@@ -17,7 +17,7 @@ Final verified funnel (as of July 2026):
 | Pre-filter hits (repos likely containing MLflow) | 65 (52 root-only scan + 13 widened subfolder scan) |
 | Final dataset | 43 repos / 147 files / 715 evaluation instances |
 
-The contamination cutoff (April 29, 2025) is the Qwen3 release date. Only repositories CREATED on or after this date are included, so neither Qwen3-8B nor Llama 3.1 8B can have seen this code during training. Do not relax this date without supervisor approval.
+The contamination cutoff (April 29, 2025) is the Qwen3 release date.
 
 ## 2. How the data was collected
 
@@ -54,39 +54,5 @@ mlflow-data-collection/
     └── MLflow_v3.ipynb        <- crash-proof resumable collection notebook
 ```
 
-<!-- TODO(Noor): adjust names/paths above to match what you actually upload -->
 
 ## 4. How to run the collection scripts
-
-<!-- TODO(Noor): verify these invocations against the actual scripts before sending -->
-
-```bash
-# 1. Scan candidate repos for mlflow imports (root + subfolders)
-python scripts/widened_scan.py --input data/seart_export.csv --output data/scan_manifest.csv
-
-# 2. AST-detect direct mlflow calls in flagged files
-python scripts/local_detector.py --input data/scan_manifest.csv --output data/mlflow_files.csv
-
-# 3. Build evaluation instances (dry run first)
-python scripts/instance_builder.py --dry-run
-python scripts/instance_builder.py --input data/mlflow_files.csv --output data/instances.jsonl
-```
-
-## 5. Important note on the inference drafts
-
-`inference/run_inference.py` implements the MASKED SINGLE-CALL COMPLETION task from the Task Design Proposal (mask one direct mlflow call, 40/10-line context, two prompting modes: raw completion and instruction). It already supports: progress tracking, resume without repeating completed work, JSONL outputs, greedy decoding, and SLURM array submission on Fir with the HuggingFace transformers library.
-
-Corey's project plan describes a TWO-STEP design (generate a specification from the file, then regenerate code from the specification). These are different task designs. Confirm with Corey which is current before building further. Either way, the resume/tracking/SLURM scaffolding in the draft is reusable.
-
-## 6. Compute Canada (Fir) notes
-
-- Cluster: fir.alliancecan.ca; venv at ~/mlflow_project/env
-- Model weights cached at /scratch/noorysf9/hf_cache (Qwen3-8B, Llama-3.1-8B-Instruct); GPU smoke test passed
-- GPU type string for SLURM: nvidia_h100_80gb_hbm3_3g.40gb
-- Compute nodes have no internet: set HF_HUB_OFFLINE=1
-- Scratch has a 60-day purge policy on untouched files
-
-## 7. Contact
-
-Questions about the dataset or collection choices: Noor Haj Yousef.
-Questions about project direction: Corey Yang-Smith / Dr. Ahmad Abdellatif.
