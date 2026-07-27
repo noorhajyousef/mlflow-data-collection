@@ -45,7 +45,7 @@ mlflow-data-collection/
 │   ├── local_detector.py      <- AST-based direct-call detector
 │   └── instance_builder.py    <- builds instances.jsonl (has --dry-run)
 ├── inference/
-│   ├── run_inference.py       <- DRAFT inference script (see note in Section 5)
+│   ├── run_inference.py       <- DRAFT inference script
 │   └── submit_inference.sh    <- DRAFT SLURM array job for Compute Canada (Fir)
 ├── docs/
 │   ├── Task_Design_Proposal.pdf
