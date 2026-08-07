@@ -41,6 +41,8 @@ from pathlib import Path
 MODELS = {
     "qwen": "Qwen/Qwen3-8B",
     "llama": "meta-llama/Llama-3.1-8B-Instruct",
+    "qwen-small": "Qwen/Qwen3-0.6B",
+    "llama-small": "meta-llama/Llama-3.2-1B-Instruct",
 }
 
 
@@ -188,33 +190,35 @@ def main() -> None:
 
     with args.output.open("a", encoding="utf-8") as out:
         for i, (inst, mode) in enumerate(todo, 1):
-            kind, prompt = build_prompt(inst, mode)
-            if kind == "chat":
-                text = tokenizer.apply_chat_template(
-                    prompt,
-                    tokenize=False,
-                    add_generation_prompt=True,
-                    **chat_kwargs,
-                )
-            else:
-                
-                text = prompt
-            inputs = tokenizer(text, return_tensors="pt").to(model.device)
+            try:
+                kind, prompt = build_prompt(inst, mode)
+                if kind == "chat":
+                    text = tokenizer.apply_chat_template(
+                        prompt, tokenize=False, add_generation_prompt=True, **chat_kwargs,
+                    )
+                else:
+                    text = prompt
+                inputs = tokenizer(text, return_tensors="pt").to(model.device)
 
-            t_gen = time.time()
-            with torch.no_grad():
-                output_ids = model.generate(
-                    **inputs,
-                    max_new_tokens=args.max_new_tokens,
-                    do_sample=False,
-                    pad_token_id=tokenizer.eos_token_id,
+                t_gen = time.time()
+                with torch.no_grad():
+                    output_ids = model.generate(
+                        **inputs,
+                        max_new_tokens=args.max_new_tokens,
+                        do_sample=False,
+                        pad_token_id=tokenizer.eos_token_id,
+                    )
+                gen_seconds = time.time() - t_gen
+                completion = tokenizer.decode(
+                    output_ids[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True,
                 )
-            gen_seconds = time.time() - t_gen
-
-            completion = tokenizer.decode(
-                output_ids[0][inputs["input_ids"].shape[1]:],
-                skip_special_tokens=True,
-            )
+                status = "completed"
+                error = None
+            except Exception as exc:
+                completion = None
+                gen_seconds = None
+                status = "failed"
+                error = str(exc)
 
             record = {
                 "instance_id": instance_uid(inst),
@@ -225,21 +229,20 @@ def main() -> None:
                 "model": args.model,
                 "model_name": model_name,
                 "mode": mode,
+                "status": status,
                 "completion": completion,
+                "error": error,
                 "max_new_tokens": args.max_new_tokens,
-                "gen_seconds": round(gen_seconds, 2),
-                "timestamp": datetime.datetime.now(
-                    datetime.timezone.utc
-                ).isoformat(),
+                "gen_seconds": round(gen_seconds, 2) if gen_seconds else None,
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             }
             out.write(json.dumps(record, ensure_ascii=False) + "\n")
-            out.flush()  # flush per record so resume never loses work
+            out.flush()
 
             if i % 25 == 0 or i == len(todo):
                 elapsed = time.time() - t0
                 rate = i / elapsed * 3600
-                print(f"[run_inference] {i}/{len(todo)} done "
-                      f"({rate:.0f}/hr, last gen {gen_seconds:.1f}s)")
+                print(f"[run_inference] {i}/{len(todo)} done ({rate:.0f}/hr, last gen {gen_seconds if gen_seconds else 'n/a'})")
 
     print("[run_inference] Complete.")
 

@@ -1,0 +1,4 @@
+Generate a complete Python script that implements exactly what is described below. Match variable names, function signatures, and string literals where given.
+
+Description:
+{description}
