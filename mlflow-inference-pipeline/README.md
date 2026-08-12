@@ -10,7 +10,7 @@ for MLflow Code Generation"* project:
    (BLEU-3), then statistically compare model combinations.
 
 Built to run first locally with small models (fast iteration), then
-unchanged on Compute Canada with the target models — only the
+unchanged on Compute Canada with the target models only the
 `--model` argument changes.
 
 See [`DATAFLOW.md`](DATAFLOW.md) for a visual map of how data moves
@@ -34,7 +34,7 @@ cp .env.example .env              # then edit .env and add your HF_TOKEN
 
 `HF_TOKEN` is required even for public models (get one at
 https://huggingface.co/settings/tokens). For any Llama model, also
-request "gated" access on that model's Hugging Face page first —
+request "gated" access on that model's Hugging Face page first 
 Qwen models have no such requirement.
 
 If `evaluation/bleu3_score.py` complains about missing NLTK data on
@@ -53,7 +53,7 @@ that trap; `HF_TOKEN` in `.env` is the only exception.
 
 ## 2. Put input files in place
 
-**If you're Noor, running this against the real dataset for the
+**The real dataset for the
 first time**, the raw `.py` files aren't stored anywhere yet — only
 `data/mlflow_files.csv` (repo + file path) exists. Reconstruct them
 first:
@@ -290,7 +290,7 @@ mlflow-inference-pipeline/
 ├── test_samples/                  <- regression-check fixture with a reference description
 ├── utils/
 │   ├── count_files.py             <- count files/folders before a run (avoid huge accidental runs)
-│   └── fetch_raw_files.py         <- reconstruct raw .py files from mlflow_files.csv (Noor's dataset)
+│   └── fetch_raw_files.py         <- reconstruct raw .py files from mlflow_files.csv 
 ├── outputs/                       <- generated descriptions + code land here
 ├── data/                          <- evaluation outputs land here
 ├── slurm/submit_pipeline.sh       <- Compute Canada job script (account bmj-842-02)
